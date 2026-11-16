@@ -1,0 +1,294 @@
+{
+ "id": "3d-texturing",
+ "name": "sofiakholina 3D-Texturing",
+ "version": "1.4.0",
+ "repo_url": "https://github.com/sofiakholina/sofiakholina-3D-Texturing",
+ "update_url": "https://raw.githubusercontent.com/sofiakholina/sofiakholina-3D-Texturing/main/tools/manifest.json",
+ "workflow_folder": "",
+ "comfyui_min": "0.45.0",
+ "comfyui_tested": "0.45.3",
+ "triton": {
+  "for": "UltraTex",
+  "by_torch": {
+   "2.4": "triton-windows<3.2",
+   "2.5": "triton-windows<3.2",
+   "2.6": "triton-windows<3.3",
+   "2.7": "triton-windows<3.4",
+   "2.8": "triton-windows<3.5",
+   "2.9": "triton-windows<3.6",
+   "2.10": "triton-windows<3.7",
+   "2.11": "triton-windows<3.7",
+   "2.12": "triton-windows<3.8",
+   "2.13": "triton-windows<3.8",
+   "2.14": "triton-windows<3.9",
+   "2.15": "triton-windows<3.10"
+  },
+  "include_libs": {
+   "3.9": "https://github.com/woct0rdho/triton-windows/releases/download/v3.0.0-windows.post1/python_3.9.13_include_libs.zip",
+   "3.10": "https://github.com/woct0rdho/triton-windows/releases/download/v3.0.0-windows.post1/python_3.10.11_include_libs.zip",
+   "3.11": "https://github.com/woct0rdho/triton-windows/releases/download/v3.0.0-windows.post1/python_3.11.9_include_libs.zip",
+   "3.12": "https://github.com/woct0rdho/triton-windows/releases/download/v3.0.0-windows.post1/python_3.12.7_include_libs.zip",
+   "3.13": "https://github.com/woct0rdho/triton-windows/releases/download/v3.0.0-windows.post1/python_3.13.2_include_libs.zip"
+  }
+ },
+ "groups": [
+  {
+   "id": "base",
+   "always": true,
+   "workflows": [
+    "3D-Texturing.json",
+    "3D-Texturing_MV.json"
+   ],
+   "triton": "recommended"
+  },
+  {
+   "id": "gguf",
+   "default_if_vram_below": 11.5,
+   "triton": "recommended",
+   "workflows": [
+    "3D-Texturing_GGUF.json",
+    "3D-Texturing_MV_GGUF.json"
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "name": "s_tools",
+   "folder": "s_tools",
+   "signature": [
+    "__init__.py",
+    "fbx_reader.py",
+    "ultratex.py"
+   ],
+   "own": true,
+   "ref": "7a3bc7f8acd2f495aac7e27d14fc2a51b703d2e2",
+   "label": "1.0.1",
+   "url": "https://codeload.github.com/sofiakholina/sofiakholina-s_tools/zip/7a3bc7f8acd2f495aac7e27d14fc2a51b703d2e2",
+   "pip": [],
+   "groups": [
+    "base",
+    "gguf"
+   ],
+   "workflows": [
+    "3D-Texturing.json",
+    "3D-Texturing_MV.json",
+    "3D-Texturing_GGUF.json",
+    "3D-Texturing_MV_GGUF.json"
+   ]
+  },
+  {
+   "name": "ComfyUI-UltraTex (visualbruno)",
+   "folder": "ComfyUI-UltraTex",
+   "signature": [
+    "nodes.py",
+    "ultratex_core/bake.py"
+   ],
+   "ref": "1f2392308e7d08374cb1c3844afe7e3ee2fadbe0",
+   "label": "1f23923",
+   "url": "https://codeload.github.com/visualbruno/ComfyUI-UltraTex/zip/1f2392308e7d08374cb1c3844afe7e3ee2fadbe0",
+   "pip": [],
+   "groups": [
+    "base",
+    "gguf"
+   ],
+   "workflows": [
+    "3D-Texturing.json",
+    "3D-Texturing_MV.json",
+    "3D-Texturing_MV_GGUF.json"
+   ]
+  },
+  {
+   "name": "UltraTex-ComfyUI-nodes (MostAadTech)",
+   "folder": "comfyui_ultratex_modular",
+   "signature": [
+    "extension.py",
+    "simple.py"
+   ],
+   "ref": "8d434a2104be520ea699a9baac2327d124387111",
+   "label": "8d434a2",
+   "url": "https://codeload.github.com/Mstafa-awad/UltraTex-ComfyUI-nodes/zip/8d434a2104be520ea699a9baac2327d124387111",
+   "pip": [
+    "gguf>=0.13"
+   ],
+   "groups": [
+    "gguf"
+   ],
+   "workflows": [
+    "3D-Texturing_GGUF.json"
+   ]
+  },
+  {
+   "name": "ComfyUI-GGUF (city96)",
+   "folder": "ComfyUI-GGUF",
+   "signature": [
+    "nodes.py",
+    "loader.py",
+    "dequant.py"
+   ],
+   "ref": "1.1.10",
+   "label": "1.1.10",
+   "url": "https://cdn.comfy.org/city96/ComfyUI-GGUF/1.1.10/node.zip",
+   "pip": [],
+   "groups": [
+    "gguf"
+   ],
+   "workflows": [
+    "3D-Texturing_GGUF.json",
+    "3D-Texturing_MV_GGUF.json"
+   ]
+  }
+ ],
+ "models": [
+  {
+   "name": "flux2_klein_9b_base_int8_convrot.safetensors",
+   "folder": "diffusion_models",
+   "size": 9405844150,
+   "urls": [
+    "https://huggingface.co/Botoni/Flux-2-Klein-INT8-ConvRot-Collection/resolve/main/transformers/flux2_klein_9b_base_int8_convrot.safetensors"
+   ],
+   "source": "huggingface.co/Botoni/Flux-2-Klein-INT8-ConvRot-Collection",
+   "license": "FLUX Non-Commercial",
+   "workflows": [
+    "3D-Texturing.json",
+    "3D-Texturing_MV.json"
+   ]
+  },
+  {
+   "name": "flux-2-klein-9b_int8_convrot.safetensors",
+   "folder": "diffusion_models",
+   "size": 9439894544,
+   "urls": [
+    "https://huggingface.co/obsxrver/ComfyUI-Native-INT8_ConvRot/resolve/main/diffusion_models/flux-2-klein-9b_int8_convrot.safetensors"
+   ],
+   "source": "huggingface.co/obsxrver/ComfyUI-Native-INT8_ConvRot",
+   "license": "FLUX Non-Commercial",
+   "workflows": [
+    "3D-Texturing_MV.json"
+   ]
+  },
+  {
+   "name": "qwen_3_8b_fp8mixed.safetensors",
+   "folder": "text_encoders",
+   "size": 8664848742,
+   "urls": [
+    "https://huggingface.co/Comfy-Org/flux2-klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b_fp8mixed.safetensors"
+   ],
+   "source": "huggingface.co/Comfy-Org/flux2-klein-9B",
+   "license": "Apache-2.0",
+   "workflows": [
+    "3D-Texturing.json",
+    "3D-Texturing_MV.json"
+   ]
+  },
+  {
+   "name": "flux2-vae.safetensors",
+   "folder": "vae",
+   "size": 336213556,
+   "urls": [
+    "https://huggingface.co/Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors"
+   ],
+   "source": "huggingface.co/Comfy-Org/flux2-dev",
+   "license": "Apache-2.0",
+   "workflows": [
+    "3D-Texturing.json",
+    "3D-Texturing_MV.json",
+    "3D-Texturing_GGUF.json",
+    "3D-Texturing_MV_GGUF.json"
+   ]
+  },
+  {
+   "name": "ultratex_flux2.safetensors",
+   "folder": "loras",
+   "size": 478172752,
+   "urls": [
+    "https://www.modelscope.ai/models/Yibo-Zhang/UltraTex/resolve/master/flux2/lora/dit_lora.safetensors",
+    "https://www.modelscope.cn/models/Yibo-Zhang/UltraTex/resolve/master/flux2/lora/dit_lora.safetensors"
+   ],
+   "source": "modelscope Yibo-Zhang/UltraTex flux2/lora/dit_lora.safetensors",
+   "license": "MIT",
+   "workflows": [
+    "3D-Texturing.json",
+    "3D-Texturing_MV.json",
+    "3D-Texturing_GGUF.json",
+    "3D-Texturing_MV_GGUF.json"
+   ]
+  },
+  {
+   "name": "ultratex_flux2_decoder.pt",
+   "folder": "ultratex",
+   "size": 99261764,
+   "urls": [
+    "https://www.modelscope.ai/models/Yibo-Zhang/UltraTex/resolve/master/flux2/decoder.pt",
+    "https://www.modelscope.cn/models/Yibo-Zhang/UltraTex/resolve/master/flux2/decoder.pt"
+   ],
+   "source": "modelscope Yibo-Zhang/UltraTex flux2/decoder.pt",
+   "license": "MIT",
+   "workflows": [
+    "3D-Texturing.json",
+    "3D-Texturing_MV.json",
+    "3D-Texturing_GGUF.json",
+    "3D-Texturing_MV_GGUF.json"
+   ],
+   "also_in": [
+    "vae"
+   ]
+  },
+  {
+   "name": "birefnet.safetensors",
+   "folder": "background_removal",
+   "size": 444473596,
+   "urls": [
+    "https://huggingface.co/Comfy-Org/BiRefNet/resolve/main/background_removal/birefnet.safetensors"
+   ],
+   "source": "huggingface.co/Comfy-Org/BiRefNet",
+   "license": "MIT",
+   "workflows": [
+    "3D-Texturing.json",
+    "3D-Texturing_MV.json",
+    "3D-Texturing_GGUF.json",
+    "3D-Texturing_MV_GGUF.json"
+   ]
+  },
+  {
+   "name": "flux-2-klein-base-9b-Q4_0.gguf",
+   "folder": "diffusion_models",
+   "size": 5616228640,
+   "urls": [
+    "https://huggingface.co/unsloth/FLUX.2-klein-base-9B-GGUF/resolve/main/flux-2-klein-base-9b-Q4_0.gguf"
+   ],
+   "source": "huggingface.co/unsloth/FLUX.2-klein-base-9B-GGUF",
+   "license": "FLUX Non-Commercial",
+   "workflows": [
+    "3D-Texturing_GGUF.json",
+    "3D-Texturing_MV_GGUF.json"
+   ]
+  },
+  {
+   "name": "flux-2-klein-9b-Q4_0.gguf",
+   "folder": "diffusion_models",
+   "size": 5616228640,
+   "urls": [
+    "https://huggingface.co/unsloth/FLUX.2-klein-9B-GGUF/resolve/main/flux-2-klein-9b-Q4_0.gguf"
+   ],
+   "source": "huggingface.co/unsloth/FLUX.2-klein-9B-GGUF",
+   "license": "FLUX Non-Commercial",
+   "workflows": [
+    "3D-Texturing_MV_GGUF.json"
+   ]
+  },
+  {
+   "name": "Qwen3-8B-Q4_K_M.gguf",
+   "folder": "text_encoders",
+   "size": 5027784512,
+   "urls": [
+    "https://huggingface.co/unsloth/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
+   ],
+   "source": "huggingface.co/unsloth/Qwen3-8B-GGUF",
+   "license": "Apache-2.0",
+   "workflows": [
+    "3D-Texturing_GGUF.json",
+    "3D-Texturing_MV_GGUF.json"
+   ]
+  }
+ ]
+}

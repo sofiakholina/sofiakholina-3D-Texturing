@@ -1,0 +1,5 @@
+logs/
+__pycache__/
+*.pyc
+*_backup_*
+_to_delete/
