@@ -61,8 +61,16 @@ T = {
                   "ComfyUI is newer than the tested version - usually fine, but untested."),
     "py": ("Python {py} / torch {torch} / CUDA {cuda}", "Python {py} / torch {torch} / CUDA {cuda}"),
     "gpu": ("Видеокарта: {g} ({v:.1f} GB)", "GPU: {g} ({v:.1f} GB)"),
-    "no_gpu": ("Видеокарта NVIDIA (CUDA) не найдена. Workflow работают только на NVIDIA - установка остановлена.",
-               "No NVIDIA (CUDA) GPU found. The workflows need NVIDIA - stopped."),
+    "cpu_torch": ("В выбранной установке ComfyUI стоит PyTorch для CPU. Для этих workflow нужен PyTorch с CUDA.",
+                  "The selected ComfyUI installation uses CPU-only PyTorch. These workflows need PyTorch with CUDA."),
+    "no_cuda_torch": ("PyTorch в выбранной установке ComfyUI не поддерживает CUDA. Нужна сборка PyTorch для NVIDIA.",
+                      "PyTorch in the selected ComfyUI installation has no CUDA support. A PyTorch build for NVIDIA is required."),
+    "cuda_gpu_unavailable": ("PyTorch с CUDA {v} установлен, но не может использовать видеокарту NVIDIA.",
+                             "PyTorch with CUDA {v} is installed but cannot use an NVIDIA GPU."),
+    "cuda_driver_hint": ("Проверьте, видит ли команда nvidia-smi видеокарту, и обновите драйвер NVIDIA при необходимости.",
+                         "Run nvidia-smi to check whether the GPU is detected and update the NVIDIA driver if needed."),
+    "cuda_install_retry": ("После исправления закройте ComfyUI, снова запустите Install.bat и выберите установку с NVIDIA.",
+                           "After fixing this, close ComfyUI, run Install.bat again, and select the NVIDIA installation."),
     "no_torch": ("PyTorch не загружается в этом Python: {e}", "PyTorch does not load in this Python: {e}"),
     "ask_group": ("{q} [Y/N, Enter = {d}]: ", "{q} [Y/N, Enter = {d}]: "),
     "ok": ("[OK]      {m}", "[OK]      {m}"),
@@ -123,6 +131,16 @@ T = {
     "u_done": ("Удаление завершено.", "Uninstall finished."),
     "c_server": ("ComfyUI не отвечает на {u}. Запустите ComfyUI и запустите Check.bat ещё раз.", "ComfyUI does not answer at {u}. Start ComfyUI and run Check.bat again."),
     "c_other": ("На этом порту запущен другой ComfyUI ({p}) - закройте его и запустите нужный.", "Another ComfyUI is running on this port ({p}) - close it and start the right one."),
+    "c_device_unknown": ("ComfyUI не сообщил, какое устройство использует.", "ComfyUI did not report which device it is using."),
+    "c_device": ("Устройство ComfyUI: {d} (PyTorch {v})", "ComfyUI device: {d} (PyTorch {v})"),
+    "c_device_cpu": ("ComfyUI запущен на CPU (PyTorch {v}). Генерация может идти очень медленно.", "ComfyUI is running on the CPU (PyTorch {v}). Generation can be very slow."),
+    "c_cpu_flag_desktop": ("Уберите --cpu в Startup Arguments выбранной установки.", "Remove --cpu from Startup Arguments for this installation."),
+    "c_cpu_flag_other": ("Уберите --cpu из команды запуска ComfyUI.", "Remove --cpu from the ComfyUI launch command."),
+    "c_cpu_desktop": ("На карточке PyTorch выберите сборку CUDA. Если в списке только CPU, на главном экране создайте New Instance и выберите Hardware → NVIDIA.", "Select a CUDA build on the PyTorch card. If the list shows only CPU builds, create a New Instance from the home screen and select Hardware → NVIDIA."),
+    "c_cpu_desktop_legacy": ("Создайте в Comfy Desktop установку с Hardware → NVIDIA.", "Create a Comfy Desktop installation with Hardware → NVIDIA."),
+    "c_cpu_portable": ("Используйте ComfyUI Portable для NVIDIA и запускайте его через run_nvidia_gpu.bat.", "Use ComfyUI Portable for NVIDIA and start it with run_nvidia_gpu.bat."),
+    "c_cpu_other": ("Установите CUDA-сборку PyTorch в Python этой установки ComfyUI.", "Install a CUDA build of PyTorch in this ComfyUI installation's Python environment."),
+    "c_cpu_retry": ("Запустите ComfyUI на NVIDIA, затем снова запустите Check.bat и выберите эту установку.", "Start ComfyUI on NVIDIA, then run Check.bat again and select that installation."),
     "c_nodes_ok": ("{w}: все ноды на месте", "{w}: all nodes loaded"),
     "c_nodes_miss": ("{w}: не загрузились ноды {n}", "{w}: nodes not loaded: {n}"),
     "c_models_miss": ("{w}: нет моделей {n}", "{w}: missing models {n}"),
@@ -862,7 +880,18 @@ def cmd_install(env, man):
         return
     LOG(f"    {t('py', py=sys.version.split()[0], torch=tver, cuda=cuda)}")
     if not gpu:
-        LOG.fail(t("no_gpu"))
+        if cuda == "none":
+            LOG.fail(t("cpu_torch" if "+cpu" in tver else "no_cuda_torch"))
+            setup_hint = {
+                "comfy-desktop": "c_cpu_desktop",
+                "desktop-legacy": "c_cpu_desktop_legacy",
+                "portable": "c_cpu_portable",
+            }.get(env.kind, "c_cpu_other")
+            LOG("    " + t(setup_hint))
+        else:
+            LOG.fail(t("cuda_gpu_unavailable", v=cuda))
+            LOG("    " + t("cuda_driver_hint"))
+        LOG("    " + t("cuda_install_retry"))
         return
     LOG(f"    {t('gpu', g=gpu, v=vram)}")
     groups, wfs = selected_workflows(man, vram)
@@ -1021,10 +1050,39 @@ def same_comfy(env, url, stats):
     # relative argv ("main.py") fits any install: compare what else is known
     return bool(sysi.get("embedded_python")) == (env.kind == "portable") and sysi.get("comfyui_version") == env.comfy_version()
 
+def report_comfy_device(env, stats):
+    devices = stats.get("devices") or []
+    device = devices[0] if isinstance(devices, list) and devices else None
+    device_type = device.get("type") if isinstance(device, dict) else None
+    if not device_type:
+        LOG.warn(t("c_device_unknown"))
+        return
+
+    system = stats.get("system") or {}
+    version = system.get("pytorch_version") or "?"
+    if device_type != "cpu":
+        LOG("    " + t("c_device", d=device.get("name") or device_type, v=version))
+        return
+
+    LOG.fail(t("c_device_cpu", v=version))
+    forced_cpu = "--cpu" in (system.get("argv") or [])
+    if forced_cpu and env.kind != "portable":
+        flag_hint = "c_cpu_flag_desktop" if env.kind == "comfy-desktop" else "c_cpu_flag_other"
+        LOG("    " + t(flag_hint))
+    if not forced_cpu or "+cpu" in version or env.kind == "portable":
+        setup_hint = {
+            "comfy-desktop": "c_cpu_desktop",
+            "desktop-legacy": "c_cpu_desktop_legacy",
+            "portable": "c_cpu_portable",
+        }.get(env.kind, "c_cpu_other")
+        LOG("    " + t(setup_hint))
+    LOG("    " + t("c_cpu_retry"))
+
 def cmd_check(env, man):
     urls = [f"http://127.0.0.1:{p}" for p in (ARGS.port or [8188, 8000])]
     info = None
     other = None
+    matched_stats = None
     for u in urls:
         try:
             stats = fetch_json(u + "/api/system_stats", timeout=10)
@@ -1033,12 +1091,15 @@ def cmd_check(env, man):
             if not same:
                 other = argv
                 continue
+            matched_stats = stats
             info = fetch_json(u + "/api/object_info", timeout=60)
             break
         except Exception:
             continue
     if info is None and other:
         LOG.warn(t("c_other", p=other))
+    if matched_stats is not None:
+        report_comfy_device(env, matched_stats)
     st = env.load_state()
     pack = st["packs"].get(man["id"], {})
     known = [w for g in man["groups"] for w in g["workflows"]]
